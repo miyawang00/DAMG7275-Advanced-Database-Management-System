@@ -1,0 +1,121 @@
+
+/* Data Hierarchy */
+
+-- Part 1
+   -- Please see the PDF file
+
+-- Part 2 
+
+with temp as (
+select City, sh.SalesPersonID, p.LastName, p.FirstName, sum(TotalDue) TotalSales,
+       rank() over (partition by City order by sum(TotalDue) asc) Ranking
+from Sales.SalesOrderHeader sh
+join Person.Address a
+on sh.ShipToAddressID = a.AddressID
+join Person.Person p
+on sh.SalesPersonID = p.BusinessEntityID
+where SalesPersonID is not null
+group by a.City, sh.SalesPersonID, p.LastName, p.FirstName),
+
+temp2 as (
+select SalesPersonID
+from Sales.SalesOrderHeader
+where SalesPersonID is not null
+group by SalesPersonID
+having count(distinct TerritoryID) > 1)
+
+select * from temp where Ranking = 1 and TotalSales > 600000 and
+                   SalesPersonID in (select * from temp2)
+order by City;
+
+
+
+/* Report */
+
+with temp1 as
+(select year(OrderDate) as OrderYear,
+   ProductID,
+   sum(sd.UnitPrice * sd.OrderQty) as TotalSale
+ from Sales.SalesOrderHeader sh
+ join Sales.SalesOrderDetail sd
+ on sh.SalesOrderID = sd.SalesOrderID
+ where ProductID in (715 , 716 , 717 )
+ group by year(OrderDate), ProductID),
+
+ temp2 as
+ (select year(OrderDate) as OrderYear,
+    cast(sum(TotalDue) as int) as TotalAnnualSale
+  from Sales.SalesOrderHeader
+  --where year(OrderDate) in (2012, 2013)
+  group by year(OrderDate)),
+
+ temp3 as
+ (select t2.OrderYear, ProductID, t1.TotalSale, t2.TotalAnnualSale
+  from temp1 t1 join temp2 t2
+  on t1.OrderYear = t2.OrderYear)
+ 
+select OrderYear,
+
+-- 715
+
+       RIGHT('          ' + CAST(format([715], 'N0') AS varchar) , 11) '      715', 
+
+       RIGHT('          ' + CAST(FORMAT(([715]+0.0) / TotalAnnualSale, 'P') AS varchar) , 8) '% of Total',
+
+case
+when LAG([715], 1, 0) OVER (ORDER BY OrderYear) = 0
+then '            '
+else
+RIGHT('          ' + CAST(FORMAT([715] - LAG([715], 1, 0) OVER (ORDER BY OrderYear), 'N0') AS varchar), 12)
+end 'Yearly Change',
+
+-- 716
+
+       isnull(RIGHT('          ' + CAST(format([716], 'N0') AS varchar) , 12), '') '      716', 
+
+       isnull(RIGHT('          ' + CAST(FORMAT(([716]+0.0) / TotalAnnualSale, 'P') AS varchar) , 8), '') '% of Total',
+
+case
+when LAG([716], 1, 0) OVER (ORDER BY OrderYear) = 0
+then '            '
+else
+isnull(RIGHT('          ' + CAST(FORMAT([716] - LAG([716], 1, 0) OVER (ORDER BY OrderYear), 'N0') AS varchar), 12), '')
+end 'Yearly Change',
+
+-- 717
+
+       RIGHT('          ' + CAST(format([717], 'N0') AS varchar) , 11) '      717', 
+
+       RIGHT('          ' + CAST(FORMAT(([717]+0.0) / TotalAnnualSale, 'P') AS varchar) , 8) '% of Total',
+
+case
+when LAG([717], 1, 0) OVER (ORDER BY OrderYear) = 0
+then '            '
+else
+RIGHT('          ' + CAST(FORMAT([717] - LAG([717], 1, 0) OVER (ORDER BY OrderYear), 'N0') AS varchar), 12)
+end 'Yearly Change',
+
+-- Grand Total
+
+       RIGHT('          ' + CAST(format(TotalAnnualSale, 'N0') AS varchar) , 11) 'TotalAnnualSale',
+
+case
+when LAG([TotalAnnualSale], 1, 0) OVER (ORDER BY OrderYear) = 0
+then '          '
+else RIGHT('          ' + CAST(FORMAT((([TotalAnnualSale]+0.0) - LAG([TotalAnnualSale], 1, 0) OVER (ORDER BY OrderYear)) / LAG([TotalAnnualSale], 1, 0) OVER (ORDER BY OrderYear), 'P') AS varchar) , 8) 
+end 'Annual %',
+
+case
+when LAG([717], 1, 0) OVER (ORDER BY OrderYear) = 0
+then '            '
+else
+RIGHT('          ' + CAST(FORMAT([TotalAnnualSale] - LAG([TotalAnnualSale], 1, 0) OVER (ORDER BY OrderYear), 'N0') AS varchar), 12)
+end 'Yearly Change'
+
+from
+(select OrderYear, ProductID, TotalSale, TotalAnnualSale from temp3) vertical
+pivot
+(max(TotalSale) for ProductID in ([715],[716],[717])) horizontal;
+
+
+
