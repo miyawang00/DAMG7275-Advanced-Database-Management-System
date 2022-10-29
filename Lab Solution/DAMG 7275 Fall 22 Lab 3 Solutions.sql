@@ -4,6 +4,33 @@
 -- Question 1 (2 points)
 
 -- Part 1
+-- Question 1 (2 points)
+
+/*
+  Write a SQL query using "FOR JSON PATH" and AdventureWorks to 
+  get the salespersons in each sales territory. Return the data
+  in the format described below.
+*/
+
+/*
+{"TerritoryID":1,
+ "SalesPeople":[{"SalesPersonID":274},{"SalesPersonID":276},{"SalesPersonID":280},
+                {"SalesPersonID":281},{"SalesPersonID":283},{"SalesPersonID":284}]},
+{"TerritoryID":2,
+ "SalesPeople":[{"SalesPersonID":274},{"SalesPersonID":275},{"SalesPersonID":277}]}
+ ***** There is more data which is not displayed here *****
+*/
+
+
+/*
+  Import the generated data into the Cosmos DB SQL API database.
+*/
+
+
+/*
+  Write a SQL query for the Cosmos DB SQL API to get
+  the total number of salespersons in each saes territory.
+*/
 
 SELECT TerritoryID,
     (   SELECT DISTINCT SalesPersonID
