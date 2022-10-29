@@ -96,6 +96,18 @@ GROUP BY c.CustomerID
 -- Question 3 (3 points)
 
 -- Part 1
+/*
+[{"TerritoryID":1,
+  "Top3Colors":[{"Color":"Black","TotalSales$":5918773},
+                {"Color":"Silver","TotalSales$":3817329},
+				{"Color":"Yellow","TotalSales$":2324072}]},
+ {"TerritoryID":2,
+  "Top3Colors":[{"Color":"Black","TotalSales$":2505403},
+                {"Color":"Red","TotalSales$":1881110},
+				{"Color":"Yellow","TotalSales$":1215118}]}
+ ***** There is more data which is not displayed here *****
+*/
+
 
 with temp as (
 select sh.TerritoryID, p.Color, 
